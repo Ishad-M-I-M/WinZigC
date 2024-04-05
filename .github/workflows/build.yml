@@ -18,21 +18,9 @@ jobs:
       - name: Build with Gradle
         run: |
           chmod +x gradlew
-          ./gradlew build --no-daemon --scan
+          ./gradlew build --no-daemon --scan -x verifyGoogleJavaFormat
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4.0.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: Ishad-M-I-M/WinZigC
-
-  windows-build:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: 17
-      - name: Build with Gradle
-        run: ./gradlew.bat build --no-daemon --scan

@@ -1,2 +1,1 @@
-module io.cse.winzigc {
-}
+module io.cse.winzigc {}
