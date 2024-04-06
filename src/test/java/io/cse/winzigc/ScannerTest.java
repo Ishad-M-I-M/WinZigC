@@ -1,11 +1,8 @@
 package io.cse.winzigc;
 
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class ScannerTest {
   @Test(groups = "scanner")
-  void testScan() {
-
-  }
+  void testScan() {}
 }

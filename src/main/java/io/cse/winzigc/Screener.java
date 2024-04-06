@@ -1,12 +1,12 @@
 package io.cse.winzigc;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
 
 public class Screener {
   public static ArrayList<Token> screen(ArrayList<Token> input) {
-    Map<String, TokenType> specialIdentifiers = Map.ofEntries(
+    Map<String, TokenType> specialIdentifiers =
+        Map.ofEntries(
             Map.entry("program", TokenType.PROGRAM),
             Map.entry("var", TokenType.VAR),
             Map.entry("const", TokenType.CONST),
@@ -39,8 +39,7 @@ public class Screener {
             Map.entry("pred", TokenType.PRED),
             Map.entry("chr", TokenType.CHR),
             Map.entry("ord", TokenType.ORD),
-            Map.entry("eof", TokenType.EOF)
-    );
+            Map.entry("eof", TokenType.EOF));
 
     ArrayList<Token> output = new ArrayList<>(input.size());
     input.forEach(
