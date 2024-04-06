@@ -154,8 +154,10 @@ class Scanner {
     if (this.nextChar == '\'') throw new IOException("Invalid token");
     builder.append(this.nextChar);
     this.setNextChar();
+    builder.append(this.nextChar);
     if (this.nextChar != '\'') throw new IOException("Invalid token");
     String value = builder.toString();
+    this.setNextChar();
     return new Token(TokenType.CHAR, value);
   }
 
