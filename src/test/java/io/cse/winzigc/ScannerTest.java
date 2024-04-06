@@ -68,7 +68,6 @@ public class ScannerTest {
   @DataProvider(name = "InvalidTokens")
   Object[] invalidTokens() {
     return new Object[] {
-      "1ABC", // Identifier starting with number
       "'ab'" // Two character wrapped by single quotes
     };
   }

@@ -39,9 +39,9 @@ task codeCoverageReport(type: JacocoReport) {
         xml.required = true
         html.required = true
         csv.required = true
-        xml.destination(new File("${buildDir}/reports/jacoco/report.xml"))
-        html.destination(new File("${buildDir}/reports/jacoco/report.html"))
-        csv.destination(new File("${buildDir}/reports/jacoco/report.csv"))
+        xml.outputLocation = new File("${buildDir}/reports/jacoco/report.xml")
+        html.outputLocation = new File("${buildDir}/reports/jacoco/report.html")
+        csv.outputLocation = new File("${buildDir}/reports/jacoco/report.csv")
     }
 
     onlyIf = {
