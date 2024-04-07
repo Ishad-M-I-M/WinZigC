@@ -3,9 +3,10 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd" >
 
 <suite name="winzigc-test-suite">
-    <test name="winzigc-tests" parallel="false">
+    <test name="winzigc-tests" parallel="true">
         <classes>
             <class name="io.cse.winzigc.ScannerTest"/>
+            <class name="io.cse.winzigc.ScreenerTest"/>
         </classes>
     </test>
 </suite>
