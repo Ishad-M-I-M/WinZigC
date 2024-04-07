@@ -31,7 +31,7 @@ jacocoTestReport {
     }
 }
 
-task codeCoverageReport(type: JacocoReport) {
+tasks.register('codeCoverageReport', JacocoReport) {
     dependsOn test
 
     executionData fileTree(project.rootDir.absolutePath).include("**/build/coverage-reports/*.exec")

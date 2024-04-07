@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -12,10 +13,10 @@ public class ScannerTest {
   @Test(groups = "scanner", dataProvider = "SingleTokens")
   void testSingleTokens(String input, Token token) throws IOException {
     InputStream is = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8));
-    var scanner = new Scanner(is);
-    var tokens = scanner.scan();
+    Scanner scanner = new Scanner(is);
+    ArrayList<Token> tokens = scanner.scan();
     Assert.assertEquals(tokens.size(), 1);
-    var result = tokens.get(0);
+    Token result = tokens.get(0);
     Assert.assertEquals(result.type, token.type);
     Assert.assertEquals(result.value, token.value);
   }
@@ -56,7 +57,7 @@ public class ScannerTest {
   @Test(groups = "scanner", dataProvider = "InvalidTokens")
   void testInvalidTokens(String input) throws IOException {
     InputStream is = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8));
-    var scanner = new Scanner(is);
+    Scanner scanner = new Scanner(is);
     try {
       scanner.scan();
       Assert.fail("Invalid token is included");
@@ -72,18 +73,21 @@ public class ScannerTest {
       "''", // Empty character wrapped by single quotes
       "'", // One single quote
       "\"", // One double quote
-      "$" // Special character
+      "$", // Special character
+      "abc { def" // Unterminated block comment
     };
   }
 
   @Test(groups = "scanner")
   void testLineComment() throws IOException {
-    var comment = "# hello $% \n";
-    InputStream is = new ByteArrayInputStream(comment.getBytes(StandardCharsets.UTF_8));
-    var scanner = new Scanner(is);
-    var tokens = scanner.scan();
-    Assert.assertEquals(tokens.size(), 2);
-    Assert.assertEquals(tokens.get(0).type, TokenType.COMMENT);
-    Assert.assertEquals(tokens.get(0).value, "# hello $% ");
+    String[] comments = {"# hello $% \n", "# hello # $% { \013 abc \f\t  "};
+    for (String comment : comments) {
+      InputStream is = new ByteArrayInputStream(comment.getBytes(StandardCharsets.UTF_8));
+      Scanner scanner = new Scanner(is);
+      ArrayList<Token> tokens = scanner.scan();
+      Assert.assertEquals(tokens.size(), 1 + (comment.contains("\n") ? 1 : 0));
+      Assert.assertEquals(tokens.get(0).type, TokenType.COMMENT);
+      Assert.assertEquals(tokens.get(0).value, comment.replace("\n", ""));
+    }
   }
 }

@@ -179,7 +179,7 @@ class Scanner {
     do {
       builder.append(this.nextChar);
       this.setNextChar();
-    } while (this.nextChar != '\n');
+    } while (this.nextChar != '\n' && this.nextChar != 0);
     String value = builder.toString();
     return new Token(TokenType.COMMENT, value);
   }
@@ -189,6 +189,7 @@ class Scanner {
     do {
       builder.append(this.nextChar);
       this.setNextChar();
+      if (this.nextChar == 0) throw new IOException("Invalid token");
     } while (this.nextChar != '}');
     builder.append(this.nextChar);
     this.setNextChar();
