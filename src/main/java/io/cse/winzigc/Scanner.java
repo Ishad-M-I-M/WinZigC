@@ -166,6 +166,7 @@ class Scanner {
     do {
       builder.append(this.nextChar);
       this.setNextChar();
+      if (this.nextChar == 0) throw new IOException("Invalid token");
     } while (this.nextChar != '"');
     builder.append(this.nextChar);
     this.setNextChar();

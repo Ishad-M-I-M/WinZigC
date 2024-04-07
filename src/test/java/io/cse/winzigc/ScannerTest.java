@@ -68,7 +68,22 @@ public class ScannerTest {
   @DataProvider(name = "InvalidTokens")
   Object[] invalidTokens() {
     return new Object[] {
-      "'ab'" // Two character wrapped by single quotes
+      "'ab'", // Two character wrapped by single quotes
+      "''", // Empty character wrapped by single quotes
+      "'", // One single quote
+      "\"", // One double quote
+      "$" // Special character
     };
+  }
+
+  @Test(groups = "scanner")
+  void testLineComment() throws IOException {
+    var comment = "# hello $% \n";
+    InputStream is = new ByteArrayInputStream(comment.getBytes(StandardCharsets.UTF_8));
+    var scanner = new Scanner(is);
+    var tokens = scanner.scan();
+    Assert.assertEquals(tokens.size(), 2);
+    Assert.assertEquals(tokens.get(0).type, TokenType.COMMENT);
+    Assert.assertEquals(tokens.get(0).value, "# hello $% ");
   }
 }
