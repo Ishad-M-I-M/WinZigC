@@ -31,8 +31,11 @@ public class TreeTest {
       new Object[] {
         new Tree(
             "and",
-            new ArrayList<>(Arrays.asList(new Tree("not", new ArrayList<>(Arrays.asList(new Tree("k")))), new Tree("j")))),
-        new ArrayList<>(Arrays.asList("and", ". not", ". . k",". j"))
+            new ArrayList<>(
+                Arrays.asList(
+                    new Tree("not", new ArrayList<>(Arrays.asList(new Tree("k")))),
+                    new Tree("j")))),
+        new ArrayList<>(Arrays.asList("and", ". not", ". . k", ". j"))
       }
     };
   }
