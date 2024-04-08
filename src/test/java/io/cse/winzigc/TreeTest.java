@@ -3,7 +3,6 @@ package io.cse.winzigc;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -35,8 +34,7 @@ public class TreeTest {
             "and",
             new ArrayList<>(
                 Arrays.asList(
-                    new Tree("not", new ArrayList<>(List.of(new Tree("k")))),
-                    new Tree("j")))),
+                    new Tree("not", new ArrayList<>(List.of(new Tree("k")))), new Tree("j")))),
         new ArrayList<>(Arrays.asList("and(2)", ". not(1)", ". . k(0)", ". j(0)"))
       }
     };
