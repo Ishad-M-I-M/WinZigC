@@ -91,8 +91,8 @@ public class Parser {
       stack.push(new Tree(nextToken.value));
       buildTree("<char>", 1);
     } else if (nextToken.type == TokenType.IDENTIFIER) {
-      stack.push(new Tree(nextToken.value));
-      buildTree("<identifier>", 1);
+      unsetNextToken();
+      parseIdentifier();
     } else {
       throw new ParseException("Unexpected token " + nextToken.value, this.index);
     }
@@ -249,9 +249,7 @@ public class Parser {
     setNextToken();
     if (nextToken.type != TokenType.FUNCTION)
       throw new ParseException("Unexpected token " + nextToken.value, this.index);
-    setNextToken();
-    if (nextToken.type != TokenType.IDENTIFIER)
-      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseIdentifier();
     setNextToken();
     if (nextToken.type != TokenType.OPEN_BRACKET)
       throw new ParseException("Unexpected token " + nextToken.value, this.index);
@@ -262,19 +260,19 @@ public class Parser {
     setNextToken();
     if (nextToken.type != TokenType.COLON)
       throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseIdentifier();
     setNextToken();
-    if (nextToken.type != TokenType.IDENTIFIER)
+    if (nextToken.type != TokenType.SEMICOLON)
       throw new ParseException("Unexpected token " + nextToken.value, this.index);
     parseConsts();
     parseTypes();
     parseDclns();
     parseBody();
-    setNextToken();
-    if (nextToken.type != TokenType.IDENTIFIER)
-      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseIdentifier();
     setNextToken();
     if (nextToken.type != TokenType.SEMICOLON)
       throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    buildTree("fcn", 8);
   }
 
   private void parseBody() throws ParseException {
@@ -290,12 +288,32 @@ public class Parser {
     buildTree("block", newSize - prevSize);
   }
 
-  private void parseStatementList() throws ParseException {
-    // TODO: Implement
+  private void parseParams() throws ParseException {
+    int prevSize = stack.size();
+    parseX_11();
+    int newSize = stack.size();
+    buildTree("params", newSize - prevSize);
   }
 
-  private void parseParams() throws ParseException {
-    // TODO: Implement
+  private void parseStatementList() throws ParseException {
+    while (true) {
+      setNextToken();
+      if (nextToken.type == TokenType.END
+          || nextToken.type == TokenType.UNTIL
+          || nextToken.type == TokenType.POOL) {
+        unsetNextToken();
+        break;
+      }
+      unsetNextToken();
+      parseStatement();
+      setNextToken();
+      if (nextToken.type != TokenType.SEMICOLON)
+        throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    }
+  }
+
+  private void parseStatement() throws ParseException {
+    // TODO: implement
   }
 
   private void buildTree(String name, int nItems) throws ParseException {
