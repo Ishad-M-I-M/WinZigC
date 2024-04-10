@@ -313,7 +313,241 @@ public class Parser {
   }
 
   private void parseStatement() throws ParseException {
+    setNextToken();
+    TokenType nextType = nextToken.type;
+    unsetNextToken();
+    switch (nextType) {
+      case IDENTIFIER:
+        {
+          parseAssignment();
+          break;
+        }
+      case OUTPUT:
+        {
+          parseOutput();
+          break;
+        }
+      case IF:
+        {
+          parseIf();
+          break;
+        }
+      case WHILE:
+        {
+          parseWhile();
+          break;
+        }
+      case REPEAT:
+        {
+          parseRepeat();
+          break;
+        }
+      case FOR:
+        {
+          parseFor();
+          break;
+        }
+      case LOOP:
+        {
+          parseLoop();
+          break;
+        }
+      case CASE:
+        {
+          parseCase();
+          break;
+        }
+      case READ:
+        {
+          parseRead();
+          break;
+        }
+      case EXIT:
+        {
+          parseExit();
+          break;
+        }
+      case RETURN:
+        {
+          parseReturn();
+          break;
+        }
+      case BEGIN:
+        {
+          parseBody();
+          break;
+        }
+      default:
+        {
+          break;
+        }
+    }
+  }
+
+  private void parseAssignment() throws ParseException {
+    parseIdentifier();
+    setNextToken();
+    String nodeType;
+    switch (nextToken.type) {
+      case ASSIGNMENT:
+        {
+          nodeType = "assign";
+          parseExpression();
+          break;
+        }
+      case SWAP:
+        {
+          nodeType = "swap";
+          parseIdentifier();
+          break;
+        }
+      default:
+        {
+          throw new ParseException("Unexpected token " + nextToken.value, this.index);
+        }
+    }
+    buildTree(nodeType, 2);
+  }
+
+  private void parseExpression() throws ParseException {
     // TODO: implement
+  }
+
+  private void parseOutput() throws ParseException {
+    setNextToken();
+    if (nextToken.type != TokenType.OUTPUT)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    setNextToken();
+    if (nextToken.type != TokenType.OPEN_BRACKET)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    int prevSize = stack.size();
+    parseOutExpList();
+    int newSize = stack.size();
+    if (nextToken.type != TokenType.CLOSE_BRACKET)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    buildTree("output", newSize - prevSize);
+  }
+
+  private void parseOutExpList() throws ParseException {
+    parseOutExp();
+    setNextToken();
+    while (nextToken.type == TokenType.COMMA) {
+      parseOutExp();
+      setNextToken();
+    }
+    unsetNextToken();
+  }
+
+  private void parseOutExp() throws ParseException {
+    setNextToken();
+    if (nextToken.type == TokenType.STRING) {
+      stack.push(new Tree(nextToken.value));
+      buildTree("<string>", 1);
+    } else {
+      unsetNextToken();
+      parseExpression();
+    }
+  }
+
+  private void parseIf() throws ParseException {
+    setNextToken();
+    if (nextToken.type != TokenType.IF)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    int prevSize = stack.size();
+    parseExpression();
+    setNextToken();
+    if (nextToken.type != TokenType.THEN)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseStatement();
+    parseElse();
+    int newSize = stack.size();
+    buildTree("if", newSize - prevSize);
+  }
+
+  private void parseElse() throws ParseException {
+    setNextToken();
+    if (nextToken.type == TokenType.ELSE) {
+      parseStatement();
+    } else {
+      unsetNextToken();
+    }
+  }
+
+  private void parseWhile() throws ParseException {
+    setNextToken();
+    if (nextToken.type != TokenType.WHILE)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseExpression();
+    setNextToken();
+    if (nextToken.type != TokenType.DO)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseStatement();
+    buildTree("while", 2);
+  }
+
+  private void parseRepeat() throws ParseException {
+    setNextToken();
+    if (nextToken.type != TokenType.REPEAT)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseStatementList();
+    setNextToken();
+    if (nextToken.type != TokenType.UNTIL)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseExpression();
+    buildTree("repeat", 2);
+  }
+
+  private void parseFor() throws ParseException {
+    // TODO: implement
+  }
+
+  private void parseLoop() throws ParseException {
+    setNextToken();
+    if (nextToken.type != TokenType.LOOP)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    int prevSize = stack.size();
+    parseStatementList();
+    int newSize = stack.size();
+    setNextToken();
+    if (nextToken.type != TokenType.POOL)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    buildTree("loop", newSize - prevSize);
+  }
+
+  private void parseCase() throws ParseException {
+    // TODO: implement
+  }
+
+  private void parseRead() throws ParseException {
+    setNextToken();
+    if (nextToken.type != TokenType.READ)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    setNextToken();
+    if (nextToken.type != TokenType.OPEN_BRACKET)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    int prevSize = stack.size();
+    parseNameList();
+    int newSize = stack.size();
+    setNextToken();
+    if (nextToken.type != TokenType.CLOSE_BRACKET)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    buildTree("read", newSize - prevSize);
+  }
+
+  private void parseExit() throws ParseException {
+    setNextToken();
+    if (nextToken.type != TokenType.EXIT)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseExpression();
+    buildTree("exit", 0);
+  }
+
+  private void parseReturn() throws ParseException {
+    setNextToken();
+    if (nextToken.type != TokenType.RETURN)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseExpression();
+    buildTree("return", 2);
   }
 
   private void buildTree(String name, int nItems) throws ParseException {
