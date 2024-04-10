@@ -246,7 +246,36 @@ public class Parser {
   }
 
   private void parseFcn() throws ParseException {
-    // TODO: Implement
+    setNextToken();
+    if (nextToken.type != TokenType.FUNCTION)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    setNextToken();
+    if (nextToken.type != TokenType.IDENTIFIER)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    setNextToken();
+    if (nextToken.type != TokenType.OPEN_BRACKET)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseParams();
+    setNextToken();
+    if (nextToken.type != TokenType.CLOSE_BRACKET)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    setNextToken();
+    if (nextToken.type != TokenType.COLON)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    setNextToken();
+    if (nextToken.type != TokenType.IDENTIFIER)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseConsts();
+    parseTypes();
+    parseDclns();
+    parseBody();
+    setNextToken();
+    if (nextToken.type != TokenType.IDENTIFIER)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    setNextToken();
+    if (nextToken.type != TokenType.SEMICOLON)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+
   }
 
   private void parseBody() throws ParseException {
@@ -263,6 +292,10 @@ public class Parser {
   }
 
   private void parseStatementList() throws ParseException {
+    // TODO: Implement
+  }
+
+  private void parseParams() throws ParseException {
     // TODO: Implement
   }
 
