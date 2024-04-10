@@ -275,7 +275,6 @@ public class Parser {
     setNextToken();
     if (nextToken.type != TokenType.SEMICOLON)
       throw new ParseException("Unexpected token " + nextToken.value, this.index);
-
   }
 
   private void parseBody() throws ParseException {
