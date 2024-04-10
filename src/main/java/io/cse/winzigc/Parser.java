@@ -498,7 +498,48 @@ public class Parser {
   }
 
   private void parseFor() throws ParseException {
-    // TODO: implement
+    setNextToken();
+    if (nextToken.type != TokenType.FOR)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    setNextToken();
+    if (nextToken.type != TokenType.OPEN_BRACKET)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseForStat();
+    setNextToken();
+    if (nextToken.type != TokenType.SEMICOLON)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseForExp();
+    setNextToken();
+    if (nextToken.type != TokenType.SEMICOLON)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseForStat();
+    setNextToken();
+    if (nextToken.type != TokenType.CLOSE_BRACKET)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseStatement();
+    buildTree("for", 4);
+  }
+
+  private void parseForStat() throws ParseException {
+    setNextToken();
+    if (nextToken.type != TokenType.SEMICOLON) {
+      unsetNextToken();
+      parseAssignment();
+    } else {
+      unsetNextToken();
+      buildTree("<null>", 0);
+    }
+  }
+
+  private void parseForExp() throws ParseException {
+    setNextToken();
+    if (nextToken.type != TokenType.SEMICOLON) {
+      unsetNextToken();
+      parseExpression();
+    } else {
+      unsetNextToken();
+      buildTree("<null>", 0);
+    }
   }
 
   private void parseLoop() throws ParseException {
