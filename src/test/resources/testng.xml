@@ -8,6 +8,7 @@
             <class name="io.cse.winzigc.ScannerTest"/>
             <class name="io.cse.winzigc.ScreenerTest"/>
             <class name="io.cse.winzigc.TreeTest"/>
+            <class name="io.cse.winzigc.ParserTest"/>
         </classes>
     </test>
 </suite>

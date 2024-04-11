@@ -2,6 +2,7 @@ package io.cse.winzigc;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 
 public class Parser {
@@ -411,6 +412,7 @@ public class Parser {
 
   private void parseExpression() throws ParseException {
     // TODO: implement
+    throw new ParseException("Unimplemented", 0);
   }
 
   private void parseOutput() throws ParseException {
@@ -557,6 +559,7 @@ public class Parser {
 
   private void parseCase() throws ParseException {
     // TODO: implement
+    throw new ParseException("Unimplemented", 0);
   }
 
   private void parseRead() throws ParseException {
@@ -595,7 +598,7 @@ public class Parser {
     if (stack.size() < nItems)
       throw new ParseException(
           "Stack has only " + stack.size() + " elements for " + name, this.index);
-    ArrayList<Tree> children = new ArrayList<>(nItems);
+    ArrayList<Tree> children = new ArrayList<>(Collections.nCopies(nItems, null));
     for (int ind = nItems - 1; ind >= 0; ind--) {
       Tree child = stack.pop();
       children.add(ind, child);
