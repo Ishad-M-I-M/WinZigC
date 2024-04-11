@@ -57,7 +57,7 @@ public class Parser {
     setNextToken();
     if (nextToken.type != TokenType.CONST) {
       unsetNextToken();
-      stack.push(new Tree("consts"));
+      buildTree("consts", 0);
       return;
     }
     int prevSize = stack.size();
@@ -112,7 +112,7 @@ public class Parser {
     setNextToken();
     if (nextToken.type != TokenType.TYPE) {
       unsetNextToken();
-      stack.push(new Tree("types"));
+      buildTree("types", 0);
       return;
     }
     int prevSize = stack.size();
@@ -185,7 +185,7 @@ public class Parser {
     setNextToken();
     if (nextToken.type != TokenType.VAR) {
       unsetNextToken();
-      stack.push(new Tree("dclns"));
+      buildTree("dclns", 0);
       return;
     }
     int prevSize = stack.size();
@@ -291,9 +291,26 @@ public class Parser {
 
   private void parseParams() throws ParseException {
     int prevSize = stack.size();
-    parseX_11();
+    parseParamList();
     int newSize = stack.size();
     buildTree("params", newSize - prevSize);
+  }
+
+  private void parseParamList() throws ParseException {
+    setNextToken();
+    if (nextToken.type != TokenType.IDENTIFIER) {
+      unsetNextToken();
+      return;
+    }
+    unsetNextToken();
+    while (true) {
+      parseDcln();
+      setNextToken();
+      if (nextToken.type != TokenType.SEMICOLON) {
+        unsetNextToken();
+        return;
+      }
+    }
   }
 
   private void parseStatementList() throws ParseException {
@@ -601,7 +618,7 @@ public class Parser {
     ArrayList<Tree> children = new ArrayList<>(Collections.nCopies(nItems, null));
     for (int ind = nItems - 1; ind >= 0; ind--) {
       Tree child = stack.pop();
-      children.add(ind, child);
+      children.set(ind, child);
     }
     Tree parent = new Tree(name, children);
     stack.push(parent);
