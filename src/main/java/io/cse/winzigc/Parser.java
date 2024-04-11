@@ -1,10 +1,7 @@
 package io.cse.winzigc;
 
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedList;
+import java.util.*;
 
 public class Parser {
 
@@ -231,18 +228,16 @@ public class Parser {
   }
 
   private void parseSubProgs() throws ParseException {
-    try {
-      setNextToken();
-      if (nextToken.type != TokenType.FUNCTION) return;
-    } catch (ParseException ignored) {
-      return;
-    } finally {
-      unsetNextToken();
-      buildTree("subprogs", 0);
-    }
     int prevSize = stack.size();
-    parseFcn();
-    parseSubProgs();
+    while (true) {
+      setNextToken();
+      if (nextToken.type != TokenType.FUNCTION) {
+        unsetNextToken();
+        break;
+      }
+      unsetNextToken();
+      parseFcn();
+    }
     int newSize = stack.size();
     buildTree("subprogs", newSize - prevSize);
   }
@@ -315,19 +310,21 @@ public class Parser {
   }
 
   private void parseStatementList() throws ParseException {
-    while (true) {
-      setNextToken();
-      if (nextToken.type == TokenType.END
-          || nextToken.type == TokenType.UNTIL
-          || nextToken.type == TokenType.POOL) {
-        unsetNextToken();
-        break;
-      }
+    setNextToken();
+    if (nextToken.type == TokenType.END
+        || nextToken.type == TokenType.UNTIL
+        || nextToken.type == TokenType.POOL) {
       unsetNextToken();
+      return;
+    }
+    unsetNextToken();
+    while (true) {
       parseStatement();
       setNextToken();
-      if (nextToken.type != TokenType.SEMICOLON)
-        throw new ParseException("Unexpected token " + nextToken.value, this.index);
+      if (nextToken.type != TokenType.SEMICOLON) {
+        unsetNextToken();
+        return;
+      }
     }
   }
 
@@ -398,6 +395,7 @@ public class Parser {
         }
       default:
         {
+          buildTree("<null>", 0);
           break;
         }
     }
@@ -428,11 +426,6 @@ public class Parser {
     buildTree(nodeType, 2);
   }
 
-  private void parseExpression() throws ParseException {
-    parseTerm();
-    parseX_7();
-  }
-
   private void parseOutput() throws ParseException {
     setNextToken();
     if (nextToken.type != TokenType.OUTPUT)
@@ -443,6 +436,7 @@ public class Parser {
     int prevSize = stack.size();
     parseOutExpList();
     int newSize = stack.size();
+    setNextToken();
     if (nextToken.type != TokenType.CLOSE_BRACKET)
       throw new ParseException("Unexpected token " + nextToken.value, this.index);
     buildTree("output", newSize - prevSize);
@@ -462,10 +456,13 @@ public class Parser {
     setNextToken();
     if (nextToken.type == TokenType.STRING) {
       stack.push(new Tree(nextToken.value));
-      buildTree("<string>", 1);
+      buildTree("string", 1);
     } else {
       unsetNextToken();
+      int prevSize = stack.size();
       parseExpression();
+      int newSize = stack.size();
+      buildTree("integer", newSize - prevSize);
     }
   }
 
@@ -509,12 +506,14 @@ public class Parser {
     setNextToken();
     if (nextToken.type != TokenType.REPEAT)
       throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    int prevSize = stack.size();
     parseStatementList();
     setNextToken();
     if (nextToken.type != TokenType.UNTIL)
       throw new ParseException("Unexpected token " + nextToken.value, this.index);
     parseExpression();
-    buildTree("repeat", 2);
+    int newSize = stack.size();
+    buildTree("repeat", newSize - prevSize);
   }
 
   private void parseFor() throws ParseException {
@@ -558,7 +557,7 @@ public class Parser {
       parseExpression();
     } else {
       unsetNextToken();
-      buildTree("<null>", 0);
+      buildTree("true", 0);
     }
   }
 
@@ -576,6 +575,9 @@ public class Parser {
   }
 
   private void parseCase() throws ParseException {
+    setNextToken();
+    if (nextToken.type != TokenType.CASE)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
     int prevSize = stack.size();
     parseExpression();
     setNextToken();
@@ -619,7 +621,56 @@ public class Parser {
     if (nextToken.type != TokenType.RETURN)
       throw new ParseException("Unexpected token " + nextToken.value, this.index);
     parseExpression();
-    buildTree("return", 2);
+    buildTree("return", 1);
+  }
+
+  private void parseExpression() throws ParseException {
+    parseTerm();
+    parseX_7();
+  }
+
+  private void parseX_7() throws ParseException {
+    setNextToken();
+    String node;
+    switch (nextToken.type) {
+      case LESS_EQUALS:
+        {
+          node = "<=";
+          break;
+        }
+      case LESS:
+        {
+          node = "<";
+          break;
+        }
+      case GREATER_EQUALS:
+        {
+          node = ">=";
+          break;
+        }
+      case GREATER:
+        {
+          node = ">";
+          break;
+        }
+      case EQUALS:
+        {
+          node = "=";
+          break;
+        }
+      case NOT_EQUALS:
+        {
+          node = "<>";
+          break;
+        }
+      default:
+        {
+          unsetNextToken();
+          return;
+        }
+    }
+    parseTerm();
+    buildTree(node, 2);
   }
 
   private void parseTerm() throws ParseException {
@@ -627,23 +678,34 @@ public class Parser {
     parseX_14();
   }
 
-  private void parseX_7() throws ParseException {
+  private void parseX_14() throws ParseException {
     setNextToken();
-    ArrayList<TokenType> possibleNextTokens =
-        new ArrayList<>(
-            Arrays.asList(
-                TokenType.LESS_EQUALS,
-                TokenType.LESS,
-                TokenType.GREATER_EQUALS,
-                TokenType.GREATER,
-                TokenType.EQUALS,
-                TokenType.NOT_EQUALS));
-    if (possibleNextTokens.contains(nextToken.type)) {
-      parseTerm();
-      buildTree(nextToken.value, 2);
-    } else {
-      unsetNextToken();
+    String node;
+    switch (nextToken.type) {
+      case PLUS:
+        {
+          node = "+";
+          break;
+        }
+      case MINUS:
+        {
+          node = "-";
+          break;
+        }
+      case OR:
+        {
+          node = "or";
+          break;
+        }
+      default:
+        {
+          unsetNextToken();
+          return;
+        }
     }
+    parseFactor();
+    parseX_14();
+    buildTree(node, 2);
   }
 
   private void parseFactor() throws ParseException {
@@ -651,27 +713,13 @@ public class Parser {
     parseX_15();
   }
 
-  private void parseX_14() throws ParseException {
-    setNextToken();
-    ArrayList<TokenType> possibleNextTokens =
-        new ArrayList<>(Arrays.asList(TokenType.PLUS, TokenType.MINUS, TokenType.OR));
-    if (possibleNextTokens.contains(nextToken.type)) {
-      parseFactor();
-      parseX_14();
-      buildTree(nextToken.value, 2);
-    } else {
-      unsetNextToken();
-    }
-  }
-
   private void parsePrimary() throws ParseException {
     setNextToken();
     switch (nextToken.type) {
       case MINUS:
-      case NOT:
         {
           parsePrimary();
-          buildTree(nextToken.value, 2);
+          buildTree("-", 1);
           break;
         }
       case PLUS:
@@ -679,13 +727,27 @@ public class Parser {
           parsePrimary();
           break;
         }
+      case NOT:
+        {
+          parsePrimary();
+          buildTree("not", 1);
+          break;
+        }
       case EOF:
         {
           buildTree(nextToken.value, 0);
+          break;
         }
       case INT:
+        {
+          this.stack.push(new Tree(nextToken.value));
+          buildTree("<integer>", 1);
+          break;
+        }
       case CHAR:
         {
+          this.stack.push(new Tree(nextToken.value));
+          buildTree("<char>", 1);
           break;
         }
       case OPEN_BRACKET:
@@ -697,67 +759,128 @@ public class Parser {
           break;
         }
       case SUCC:
-      case PRED:
         {
-          String tokenValue = nextToken.value;
           setNextToken();
           if (nextToken.type != TokenType.OPEN_BRACKET)
             throw new ParseException("Unexpected token " + nextToken.value, this.index);
+          int prevSize = stack.size();
           parseExpression();
           setNextToken();
           if (nextToken.type != TokenType.CLOSE_BRACKET)
             throw new ParseException("Unexpected token " + nextToken.value, this.index);
-          buildTree(tokenValue, 1);
+          int newSize = stack.size();
+          buildTree("succ", newSize - prevSize);
+          break;
+        }
+      case PRED:
+        {
+          setNextToken();
+          if (nextToken.type != TokenType.OPEN_BRACKET)
+            throw new ParseException("Unexpected token " + nextToken.value, this.index);
+          int prevSize = stack.size();
+          parseExpression();
+          setNextToken();
+          if (nextToken.type != TokenType.CLOSE_BRACKET)
+            throw new ParseException("Unexpected token " + nextToken.value, this.index);
+          int newSize = stack.size();
+          buildTree("pred", newSize - prevSize);
           break;
         }
       case CHR:
-      case ORD:
         {
-          String tokenValue = nextToken.value;
           setNextToken();
           if (nextToken.type != TokenType.OPEN_BRACKET)
             throw new ParseException("Unexpected token " + nextToken.value, this.index);
+          int prevSize = stack.size();
           parseExpression();
           setNextToken();
           if (nextToken.type != TokenType.CLOSE_BRACKET)
             throw new ParseException("Unexpected token " + nextToken.value, this.index);
-          buildTree(tokenValue, 0);
+          int newSize = stack.size();
+          buildTree("chr", newSize - prevSize);
+          break;
+        }
+      case ORD:
+        {
+          setNextToken();
+          if (nextToken.type != TokenType.OPEN_BRACKET)
+            throw new ParseException("Unexpected token " + nextToken.value, this.index);
+          int prevSize = stack.size();
+          parseExpression();
+          setNextToken();
+          if (nextToken.type != TokenType.CLOSE_BRACKET)
+            throw new ParseException("Unexpected token " + nextToken.value, this.index);
+          int newSize = stack.size();
+          buildTree("ord", newSize - prevSize);
           break;
         }
       case IDENTIFIER:
         {
-          int prevSize = stack.size();
+          unsetNextToken();
           parseX_8();
-          int newSize = stack.size();
-          buildTree("call", newSize - prevSize);
+          break;
+        }
+      default:
+        {
+          throw new ParseException("Unexpected token " + nextToken.value, this.index);
         }
     }
   }
 
   private void parseX_8() throws ParseException {
     setNextToken();
+    if (nextToken.type != TokenType.IDENTIFIER) {
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    }
+    int prevSize = stack.size();
+    this.stack.push(new Tree(nextToken.value));
+    buildTree("<identifier>", 1);
+    setNextToken();
     if (nextToken.type != TokenType.OPEN_BRACKET) {
       unsetNextToken();
       return;
     }
-    parseExpression();
+    parseExpressionList();
     setNextToken();
     if (nextToken.type != TokenType.CLOSE_BRACKET)
       throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    int newSize = stack.size();
+    buildTree("call", newSize - prevSize);
   }
 
   private void parseX_15() throws ParseException {
     setNextToken();
-    ArrayList<TokenType> possibleNextTokens =
-        new ArrayList<>(
-            Arrays.asList(TokenType.MULTIPLY, TokenType.DIVIDE, TokenType.AND, TokenType.MOD));
-    if (possibleNextTokens.contains(nextToken.type)) {
-      parseTerm();
-      parseX_15();
-      buildTree(nextToken.value, 2);
-    } else {
-      unsetNextToken();
+    String node;
+    switch (nextToken.type) {
+      case MULTIPLY:
+        {
+          node = "*";
+          break;
+        }
+      case DIVIDE:
+        {
+          node = "/";
+          break;
+        }
+      case AND:
+        {
+          node = "and";
+          break;
+        }
+      case MOD:
+        {
+          node = "mod";
+          break;
+        }
+      default:
+        {
+          unsetNextToken();
+          return;
+        }
     }
+    parsePrimary();
+    parseX_15();
+    buildTree(node, 2);
   }
 
   private void parseExpressionList() throws ParseException {
@@ -782,11 +905,73 @@ public class Parser {
     parseX_13();
   }
 
-  private void parseOtherwiseClause() throws ParseException {}
+  private void parseOtherwiseClause() throws ParseException {
+    setNextToken();
+    if (nextToken.type != TokenType.OTHERWISE) {
+      unsetNextToken();
+      return;
+    }
+    int prevSize = stack.size();
+    parseStatement();
+    int newSize = stack.size();
+    buildTree("otherwise", newSize - prevSize);
+  }
 
-  private void parseCaseClause() throws ParseException {}
+  private void parseCaseClause() throws ParseException {
+    int prevSize = stack.size();
+    parseCaseExpressionList();
+    setNextToken();
+    if (nextToken.type != TokenType.COLON)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseStatement();
+    int newSize = stack.size();
+    buildTree("case_clause", newSize - prevSize);
+  }
 
-  private void parseX_13() throws ParseException {}
+  private void parseCaseExpressionList() throws ParseException {
+    parseCaseExpression();
+    parseX_4();
+  }
+
+  private void parseCaseExpression() throws ParseException {
+    parseConstValue();
+    parseX_5();
+  }
+
+  private void parseX_5() throws ParseException {
+    setNextToken();
+    if (nextToken.type != TokenType.DOTS) {
+      unsetNextToken();
+      return;
+    }
+    parseCaseExpressionList();
+    buildTree("..", 2);
+  }
+
+  private void parseX_4() throws ParseException {
+    setNextToken();
+    if (nextToken.type != TokenType.COMMA) {
+      unsetNextToken();
+      return;
+    }
+    parseCaseExpressionList();
+  }
+
+  private void parseX_13() throws ParseException {
+    setNextToken();
+    if (nextToken.type != TokenType.INT
+        && nextToken.type != TokenType.CHAR
+        && nextToken.type != TokenType.IDENTIFIER) {
+      unsetNextToken();
+      return;
+    }
+    unsetNextToken();
+    parseCaseClause();
+    setNextToken();
+    if (nextToken.type != TokenType.SEMICOLON)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseX_13();
+  }
 
   private void buildTree(String name, int nItems) throws ParseException {
     if (stack.size() < nItems)
