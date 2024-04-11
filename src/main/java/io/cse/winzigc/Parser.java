@@ -2,6 +2,7 @@ package io.cse.winzigc;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 
@@ -428,8 +429,8 @@ public class Parser {
   }
 
   private void parseExpression() throws ParseException {
-    // TODO: implement
-    throw new ParseException("Unimplemented", 0);
+    parseTerm();
+    parseX_7();
   }
 
   private void parseOutput() throws ParseException {
@@ -575,8 +576,18 @@ public class Parser {
   }
 
   private void parseCase() throws ParseException {
-    // TODO: implement
-    throw new ParseException("Unimplemented", 0);
+    int prevSize = stack.size();
+    parseExpression();
+    setNextToken();
+    if (nextToken.type != TokenType.OF)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseCaseClauses();
+    parseOtherwiseClause();
+    setNextToken();
+    if (nextToken.type != TokenType.END)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    int newSize = stack.size();
+    buildTree("case", newSize - prevSize);
   }
 
   private void parseRead() throws ParseException {
@@ -610,6 +621,172 @@ public class Parser {
     parseExpression();
     buildTree("return", 2);
   }
+
+  private void parseTerm() throws ParseException {
+    parseFactor();
+    parseX_14();
+  }
+
+  private void parseX_7() throws ParseException {
+    setNextToken();
+    ArrayList<TokenType> possibleNextTokens =
+        new ArrayList<>(
+            Arrays.asList(
+                TokenType.LESS_EQUALS,
+                TokenType.LESS,
+                TokenType.GREATER_EQUALS,
+                TokenType.GREATER,
+                TokenType.EQUALS,
+                TokenType.NOT_EQUALS));
+    if (possibleNextTokens.contains(nextToken.type)) {
+      parseTerm();
+      buildTree(nextToken.value, 2);
+    } else {
+      unsetNextToken();
+    }
+  }
+
+  private void parseFactor() throws ParseException {
+    parsePrimary();
+    parseX_15();
+  }
+
+  private void parseX_14() throws ParseException {
+    setNextToken();
+    ArrayList<TokenType> possibleNextTokens =
+        new ArrayList<>(Arrays.asList(TokenType.PLUS, TokenType.MINUS, TokenType.OR));
+    if (possibleNextTokens.contains(nextToken.type)) {
+      parseFactor();
+      parseX_14();
+      buildTree(nextToken.value, 2);
+    } else {
+      unsetNextToken();
+    }
+  }
+
+  private void parsePrimary() throws ParseException {
+    setNextToken();
+    switch (nextToken.type) {
+      case MINUS:
+      case NOT:
+        {
+          parsePrimary();
+          buildTree(nextToken.value, 2);
+          break;
+        }
+      case PLUS:
+        {
+          parsePrimary();
+          break;
+        }
+      case EOF:
+        {
+          buildTree(nextToken.value, 0);
+        }
+      case INT:
+      case CHAR:
+        {
+          break;
+        }
+      case OPEN_BRACKET:
+        {
+          parseExpression();
+          setNextToken();
+          if (nextToken.type != TokenType.CLOSE_BRACKET)
+            throw new ParseException("Unexpected token " + nextToken.value, this.index);
+          break;
+        }
+      case SUCC:
+      case PRED:
+        {
+          String tokenValue = nextToken.value;
+          setNextToken();
+          if (nextToken.type != TokenType.OPEN_BRACKET)
+            throw new ParseException("Unexpected token " + nextToken.value, this.index);
+          parseExpression();
+          setNextToken();
+          if (nextToken.type != TokenType.CLOSE_BRACKET)
+            throw new ParseException("Unexpected token " + nextToken.value, this.index);
+          buildTree(tokenValue, 1);
+          break;
+        }
+      case CHR:
+      case ORD:
+        {
+          String tokenValue = nextToken.value;
+          setNextToken();
+          if (nextToken.type != TokenType.OPEN_BRACKET)
+            throw new ParseException("Unexpected token " + nextToken.value, this.index);
+          parseExpression();
+          setNextToken();
+          if (nextToken.type != TokenType.CLOSE_BRACKET)
+            throw new ParseException("Unexpected token " + nextToken.value, this.index);
+          buildTree(tokenValue, 0);
+          break;
+        }
+      case IDENTIFIER:
+        {
+          int prevSize = stack.size();
+          parseX_8();
+          int newSize = stack.size();
+          buildTree("call", newSize - prevSize);
+        }
+    }
+  }
+
+  private void parseX_8() throws ParseException {
+    setNextToken();
+    if (nextToken.type != TokenType.OPEN_BRACKET) {
+      unsetNextToken();
+      return;
+    }
+    parseExpression();
+    setNextToken();
+    if (nextToken.type != TokenType.CLOSE_BRACKET)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+  }
+
+  private void parseX_15() throws ParseException {
+    setNextToken();
+    ArrayList<TokenType> possibleNextTokens =
+        new ArrayList<>(
+            Arrays.asList(TokenType.MULTIPLY, TokenType.DIVIDE, TokenType.AND, TokenType.MOD));
+    if (possibleNextTokens.contains(nextToken.type)) {
+      parseTerm();
+      parseX_15();
+      buildTree(nextToken.value, 2);
+    } else {
+      unsetNextToken();
+    }
+  }
+
+  private void parseExpressionList() throws ParseException {
+    parseExpression();
+    parseX_9();
+  }
+
+  private void parseX_9() throws ParseException {
+    setNextToken();
+    if (nextToken.type != TokenType.COMMA) {
+      unsetNextToken();
+      return;
+    }
+    parseExpressionList();
+  }
+
+  private void parseCaseClauses() throws ParseException {
+    parseCaseClause();
+    setNextToken();
+    if (nextToken.type != TokenType.SEMICOLON)
+      throw new ParseException("Unexpected token " + nextToken.value, this.index);
+    parseX_13();
+  }
+
+  private void parseOtherwiseClause() throws ParseException {}
+
+  private void parseCaseClause() throws ParseException {}
+
+  private void parseX_13() throws ParseException {}
 
   private void buildTree(String name, int nItems) throws ParseException {
     if (stack.size() < nItems)
