@@ -17,8 +17,7 @@ public class TestUtils {
   }
 
   public static ArrayList<String> getOutput(String program) throws IOException {
-    File file =
-        new File(resourceDir.resolve("winzig_test_programs").resolve(program ).toString());
+    File file = new File(resourceDir.resolve("winzig_test_programs").resolve(program).toString());
     Scanner scan = new Scanner(file);
     ArrayList<String> tree = new ArrayList<>();
     while (scan.hasNextLine()) {
