@@ -12,8 +12,9 @@ public class WinZigC {
     }
     File file = new File(args[1]);
     InputStream input = new FileInputStream(file);
-    ArrayList<String> output = new Parser(Screener.screen((new Scanner(input)).scan())).parse().getTree();
-    for (String line: output) {
+    ArrayList<String> output =
+        new Parser(Screener.screen((new Scanner(input)).scan())).parse().getTree();
+    for (String line : output) {
       System.out.println(line);
     }
   }
