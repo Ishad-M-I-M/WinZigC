@@ -704,8 +704,8 @@ public class Parser {
         }
     }
     parseFactor();
-    parseX_14();
     buildTree(node, 2);
+    parseX_14();
   }
 
   private void parseFactor() throws ParseException {
