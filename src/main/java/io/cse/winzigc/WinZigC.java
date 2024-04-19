@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 public class WinZigC {
   public static void main(String[] args) throws IOException, ParseException {
-    if (args.length != 2 || args[0].compareTo("-ast") != 0) {
+    if (args.length != 2 || !args[0].matches("-{1,2}ast")) {
       System.out.println("Invalid input format.");
       System.exit(1);
     }
